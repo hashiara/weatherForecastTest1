@@ -1,15 +1,37 @@
-import json
+import mysql.connector
+from mysql.connector import Error
 import os
-import pandas as pd
 from dotenv import load_dotenv
 from urllib.request import urlopen
+import json
+import pytz
 from datetime import datetime
-from pytz import timezone
+import pandas as pd
+from linebot.exceptions import LineBotApiError
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
-from linebot.exceptions import LineBotApiError
-import pytz
 
+# データベースに接続する関数
+def db_connect():
+    # データベースへの接続情報
+    config = {
+        'user': os.environ.get("mysqlUser"),       # ユーザー名
+        'password': os.environ.get("mysqlPassword"),       # パスワード
+        'host': os.environ.get("mysqlHost"),  # ホスト
+        'database': os.environ.get("mysqlDB"),  # データベース名
+        'raise_on_warnings': True
+    }
+
+    # データベースへの接続
+    try:
+        conn = mysql.connector.connect(**config)
+        if conn.is_connected():
+            print("データベースに接続されました")
+        return conn
+    except Error as e:
+        print(f"DBエラーが発生しました: {e}")
+
+# 天気アイコンを設定する関数
 def get_weather_icon(icon_str):
     if icon_str == "01d" or icon_str == "01n":
         return "☀️"
@@ -33,75 +55,87 @@ def get_weather_icon(icon_str):
     else:
         return ""
 
-
-def send_to_line(df):
+# 文章内容を整形してLineに送信する関数
+def send_to_line(user_id, df):
     texts = []
-    count = 1
-    for k, v in df:
-        if count == 1:
-            texts.append(f"【{k}】")
+    for i, (today, data) in enumerate(df):
+        if i == 0:
+            texts.append(f"【{today}】")
             place = ""
 
-            for _, d in v.iterrows():
+            for _, d in data.iterrows():
                 if place == "" or place != f"{d['place']}":
                     texts.append(f"{d['place']}")
                 texts.append(
-                    f"{d['time']}時 {get_weather_icon(d['icon'])} {d['temp']}℃　 [{d['rain']}mm/3h]"
+                    f"{d['time']}時 {get_weather_icon(d['icon'])} {d['temp']}℃　 降水確率:{d['pop']}%"
                 )
                 place = f"{d['place']}"
-
-            texts.append("")
-            count += 1
 
     line_bot = LineBotApi(os.environ.get("LINE_ACCESS_TOKEN"))
         
     try:
-        line_bot.multicast(os.environ.get("LINE_USER_ID").split(","), TextSendMessage(text="\n".join(texts)))
+        line_bot.multicast(user_id.split(","), TextSendMessage(text="\n".join(texts)))
         print('成功')
     except LineBotApiError as e:
         print('send_to_line関数内でエラーが発生しました。')
         print('Error occurred: {}'.format(e))
 
-
+# ファイル実行時の関数
 def main():
-    load_dotenv()  # .env ファイルから環境変数を読み込む
-    url = "http://api.openweathermap.org/data/2.5/forecast"
-    ids = os.environ.get("OWM_PLACE_ID").split(",")
-    api_key = os.environ.get("OWM_API_KEY")
+    # envファイルから環境変数を読み込む
+    load_dotenv()
+    own_api_key = os.environ.get("OWM_API_KEY")
 
-    arr_rj = []
+    # DB接続
+    connection = db_connect()
+    # DB接続成功時の処理
+    if connection.is_connected():
+        cursor = connection.cursor()
+        cursor.execute("SELECT user_id, prefecture, city FROM users")
+        for row in cursor:
+            user_id = row[0]
+            prefecture_id = row[1]
+            city_id = row[2]
+            if user_id:
+                url_weather = "http://api.openweathermap.org/data/2.5/forecast"
+                url_city_name = "https://api.openweathermap.org/data/2.5/weather?"
+                # cityがあるとき
+                if city_id is not None:
+                    res = urlopen(f"{url_weather}?id={city_id}&appid={own_api_key}&lang=ja&units=metric").read()
+                    place_data = urlopen(f"{url_city_name}id={city_id}&appid={own_api_key}&lang=ja").read()
+                elif prefecture_id is not None:
+                    res = urlopen(f"{url_weather}?id={prefecture_id}&appid={own_api_key}&lang=ja&units=metric").read()
+                    place_data = urlopen(f"{url_city_name}id={prefecture_id}&appid={own_api_key}&lang=ja").read()
+                else:
+                    continue
 
-    for count, id in enumerate(ids, start=1):
-        res = urlopen(f"{url}?id={id}&appid={api_key}&lang=ja&units=metric").read()
-        res_json = json.loads(res)
-
-        if count == 1:
-            owm_place = "■大阪市の天気"
-        elif count == 2:
-            owm_place = "■小浜市の天気"
-        elif count == 3:
-            owm_place = "■浜松市の天気"
-
-        for rj in res_json["list"]:
-            conv_rj = {}
-            timezone = pytz.timezone("Asia/Tokyo")
-            timestamp = datetime.fromtimestamp(rj["dt"], tz=timezone)
-            weekday_japanese = ["月", "火", "水", "木", "金", "土", "日"][timestamp.weekday()]
-            conv_rj["date"] = timestamp.strftime("%m月%d日 {}曜日".format(weekday_japanese))
-            conv_rj["place"] = owm_place
-            conv_rj["time"] = timestamp.strftime("%H")
-            conv_rj["description"] = rj["weather"][0]["description"]
-            conv_rj["icon"] = rj["weather"][0]["icon"]
-            conv_rj["temp"] = round(rj["main"]["temp"])
-            conv_rj["rain"] = round(rj["rain"]["3h"], 1) if "rain" in rj else 0
-            arr_rj.append(conv_rj)
-
-    try:
-        send_to_line(pd.DataFrame(arr_rj).groupby("date"))
-        print('正常にメッセージを送信できました！')
-    except LineBotApiError as e:
-        print('main関数内でエラーが発生しました。')
-        print('Error occurred: {}'.format(e))
+                res_json = json.loads(res)
+                place_json = json.loads(place_data)
+                city_name = place_json['name']
+                
+                arr_rj = []
+                for rj in res_json["list"]:
+                    conv_rj = {}
+                    timezone = pytz.timezone("Asia/Tokyo")
+                    timestamp = datetime.fromtimestamp(rj["dt"], tz=timezone)
+                    weekday_japanese = ["月", "火", "水", "木", "金", "土", "日"][timestamp.weekday()]
+                    conv_rj["date"] = timestamp.strftime("%m月%d日 {}曜日".format(weekday_japanese))
+                    conv_rj["place"] = f"★{city_name}の天気"
+                    conv_rj["time"] = timestamp.strftime("%H")
+                    conv_rj["description"] = rj["weather"][0]["description"]
+                    conv_rj["icon"] = rj["weather"][0]["icon"]
+                    conv_rj["temp"] = round(rj["main"]["temp"])
+                    conv_rj["pop"] = int(rj['pop'] * 100)
+                    arr_rj.append(conv_rj)
+                
+                try:
+                    send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"))
+                    print('正常にメッセージを送信できました！')
+                except LineBotApiError as e:
+                    print('main関数内でエラーが発生しました。')
+                    print('Error occurred: {}'.format(e))
+    
+    cursor.close()
+    print("データベースを切断しました")
 
 main()
-# 変更点

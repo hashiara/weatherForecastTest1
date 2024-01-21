@@ -33,7 +33,7 @@ jobs:
         # if: ${{ steps.error1.outcome == 'failure' || steps.error2.outcome == 'failure' }}
         run: |
           python -m pip install --upgrade pip
-          pip install simplejson
+          pip install mysql-connector-python
           pip install pandas
           pip install python-dotenv
           pip install pytz
@@ -41,10 +41,12 @@ jobs:
 
       - name: Run script on push
         env:
-          OWM_PLACE_ID: ${{ secrets.OWM_PLACE_ID }}
           OWM_API_KEY: ${{ secrets.OWM_API_KEY }}
           LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
-          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}  
+          MYSQLDB: ${{ secrets.MYSQLDB }}  
+          MYSQLHOST: ${{ secrets.MYSQLHOST }}  
+          MYSQLPASSWORD: ${{ secrets.MYSQLPASSWORD }}  
+          MYSQLUSER: ${{ secrets.MYSQLUSER }}  
         run: |
           chmod +x index.py
           python index.py

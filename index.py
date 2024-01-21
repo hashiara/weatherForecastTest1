@@ -15,10 +15,10 @@ from linebot.models import TextSendMessage
 def db_connect():
     # データベースへの接続情報
     config = {
-        'user': os.environ.get("mysqlUser"),       # ユーザー名
-        'password': os.environ.get("mysqlPassword"),       # パスワード
-        'host': os.environ.get("mysqlHost"),  # ホスト
-        'database': os.environ.get("mysqlDB"),  # データベース名
+        'user': os.environ.get("MYSQLUSER"),       # ユーザー名
+        'password': os.environ.get("MYSQLPASSWORD"),       # パスワード
+        'host': os.environ.get("MYSQLHOST"),  # ホスト
+        'database': os.environ.get("MYSQLDB"),  # データベース名
         'raise_on_warnings': True
     }
 

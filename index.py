@@ -1,5 +1,5 @@
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+import urllib.parse as urlparse
 import os
 from dotenv import load_dotenv
 from urllib.request import urlopen
@@ -13,22 +13,30 @@ from linebot.models import TextSendMessage
 
 # データベースに接続する関数
 def db_connect():
-    # データベースへの接続情報
-    config = {
-        'user': os.environ.get("MYSQLUSER"),       # ユーザー名
-        'password': os.environ.get("MYSQLPASSWORD"),       # パスワード
-        'host': os.environ.get("MYSQLHOST"),  # ホスト
-        'database': os.environ.get("MYSQLDB"),  # データベース名
-        'raise_on_warnings': True
-    }
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    url = urlparse.urlparse(DATABASE_URL)
+
+    # 接続情報を取得
+    dbname = url.path[1:]
+    user = url.username
+    password = url.password
+    host = url.hostname
+    port = url.port
 
     # データベースへの接続
     try:
-        conn = mysql.connector.connect(**config)
-        if conn.is_connected():
+        conn = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port
+        )
+
+        if conn:
             print("データベースに接続されました")
         return conn
-    except Error as e:
+    except Exception as e:
         print(f"DBエラーが発生しました: {e}")
 
 # 天気アイコンを設定する関数
@@ -88,8 +96,9 @@ def main():
 
     # DB接続
     connection = db_connect()
+    
     # DB接続成功時の処理
-    if connection.is_connected():
+    if connection:
         cursor = connection.cursor()
         cursor.execute("SELECT user_id, prefecture, city FROM users")
         for row in cursor:
@@ -135,7 +144,9 @@ def main():
                     print('main関数内でエラーが発生しました。')
                     print('Error occurred: {}'.format(e))
     
+    # 接続を閉じる
     cursor.close()
+    connection.close()
     print("データベースを切断しました")
 
 main()

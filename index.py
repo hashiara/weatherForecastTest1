@@ -11,6 +11,7 @@ from linebot.exceptions import LineBotApiError
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
 
+
 # データベースに接続する関数
 def db_connect():
     DATABASE_URL = os.environ.get("DATABASE_URL")

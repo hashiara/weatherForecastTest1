@@ -96,11 +96,12 @@ def main():
 
     # DB接続
     connection = db_connect()
-    
+
     # DB接続成功時の処理
     if connection:
         cursor = connection.cursor()
         cursor.execute("SELECT user_id, prefecture, city FROM users")
+
         for row in cursor:
             user_id = row[0]
             prefecture_id = row[1]
@@ -143,9 +144,10 @@ def main():
                 except LineBotApiError as e:
                     print('main関数内でエラーが発生しました。')
                     print('Error occurred: {}'.format(e))
+
+        cursor.close()
     
     # 接続を閉じる
-    cursor.close()
     connection.close()
     print("データベースを切断しました")
 

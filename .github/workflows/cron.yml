@@ -42,11 +42,8 @@ jobs:
       - name: Run script on push
         env:
           OWM_API_KEY: ${{ secrets.OWM_API_KEY }}
-          LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
-          MYSQLDB: ${{ secrets.MYSQLDB }}  
-          MYSQLHOST: ${{ secrets.MYSQLHOST }}  
-          MYSQLPASSWORD: ${{ secrets.MYSQLPASSWORD }}  
-          MYSQLUSER: ${{ secrets.MYSQLUSER }}  
+          LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }} 
+          DATABASE_URL: ${{ secrets.DATABASE_URL }} 
         run: |
           chmod +x index.py
           python index.py

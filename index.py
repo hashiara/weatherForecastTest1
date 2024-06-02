@@ -13,7 +13,7 @@ from linebot.models import TextSendMessage
 
 # データベースに接続する関数
 def db_connect():
-    DATABASE_URL = os.getenv('DATABASE_URL')
+    DATABASE_URL = os.environ.get("DATABASE_URL")
     url = urlparse.urlparse(DATABASE_URL)
 
     # 接続情報を取得

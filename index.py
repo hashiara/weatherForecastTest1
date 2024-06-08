@@ -67,9 +67,10 @@ def get_weather_icon(icon_str):
 # 文章内容を整形してLineに送信する関数
 def send_to_line(user_id, df):
     texts = []
-    for i, (today, data) in enumerate(df):
-        if i == 0:
-            texts.append(f"【{today}】")
+    for i, (tomorrow, data) in enumerate(df):
+        if i == 1:
+            texts.append("【明日の天気】")
+            texts.append(f"{tomorrow}\n")
             place = ""
 
             for _, d in data.iterrows():
@@ -129,7 +130,7 @@ def main():
                 timestamp = datetime.fromtimestamp(rj["dt"], tz=timezone)
                 weekday_japanese = ["月", "火", "水", "木", "金", "土", "日"][timestamp.weekday()]
                 conv_rj["date"] = timestamp.strftime("%m月%d日 {}曜日".format(weekday_japanese))
-                conv_rj["place"] = f"★{city_name}の天気"
+                conv_rj["place"] = f"★{city_name}"
                 conv_rj["time"] = timestamp.strftime("%H")
                 conv_rj["description"] = rj["weather"][0]["description"]
                 conv_rj["icon"] = rj["weather"][0]["icon"]
@@ -137,14 +138,8 @@ def main():
                 conv_rj["pop"] = int(rj['pop'] * 100)
                 arr_rj.append(conv_rj)
             
-            # 翌日の天気情報を指定
-            date_group = pd.DataFrame(arr_rj).groupby("date")
-            group_keys = list(date_group.groups.keys())
-            second_group = group_keys[1]
-            tomorrow_group = date_group.get_group(second_group)
-            
             try:
-                send_to_line(user_id, tomorrow_group)
+                send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"))
                 print('正常にメッセージを送信できました！')
             except LineBotApiError as e:
                 print('main関数内でエラーが発生しました。')

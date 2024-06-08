@@ -121,6 +121,7 @@ def main():
             place_json = json.loads(place_data)
             city_name = place_json['name']
             
+            # 5日分の天気情報を取得
             arr_rj = []
             for rj in res_json["list"]:
                 conv_rj = {}
@@ -136,8 +137,14 @@ def main():
                 conv_rj["pop"] = int(rj['pop'] * 100)
                 arr_rj.append(conv_rj)
             
+            # 翌日の天気情報を指定
+            date_group = pd.DataFrame(arr_rj).groupby("date")
+            group_keys = list(date_group.groups.keys())
+            second_group = group_keys[1]
+            tomorrow_group = date_group.get_group(second_group)
+            
             try:
-                send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"))
+                send_to_line(user_id, tomorrow_group)
                 print('正常にメッセージを送信できました！')
             except LineBotApiError as e:
                 print('main関数内でエラーが発生しました。')

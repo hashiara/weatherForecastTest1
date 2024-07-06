@@ -3,7 +3,7 @@ import os
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from flask import Flask, request, abort
-from linebot.v3 import (
+from linebot import (
     LineBotApi, WebhookHandler
 )
 from linebot.exceptions import InvalidSignatureError
@@ -47,10 +47,12 @@ def handle_message(event):
         app.logger.info('Verify Event Received')
         return
     # 受け取ったメッセージをそのまま返す
-    LINE_ACCESS_TOKEN.reply_message(
-        event.reply_token,
-        TextSendMessage(text=event.message.text)
-    )
+    # LINE_ACCESS_TOKEN.reply_message(
+    #     event.reply_token,
+    #     TextSendMessage(text=event.message.text)
+    # )
+    user_id = event.source.userId
+    LINE_ACCESS_TOKEN.multicast(user_id, TextSendMessage("成功！"))
 
 if __name__ == "__main__":
     app.run()

@@ -1,5 +1,4 @@
-import psycopg2
-import urllib.parse as urlparse
+# ライブラリ
 import os
 from dotenv import load_dotenv
 from urllib.request import urlopen
@@ -11,34 +10,9 @@ from linebot.exceptions import LineBotApiError
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
 
+# 別ファイル呼び出し
+import dbConnect
 
-# データベースに接続する関数
-def db_connect():
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    url = urlparse.urlparse(DATABASE_URL)
-
-    # 接続情報を取得
-    dbname = url.path[1:]
-    user = url.username
-    password = url.password
-    host = url.hostname
-    port = url.port
-
-    # データベースへの接続
-    try:
-        conn = psycopg2.connect(
-            dbname=dbname,
-            user=user,
-            password=password,
-            host=host,
-            port=port
-        )
-
-        if conn:
-            print("データベースに接続されました")
-        return conn
-    except Exception as e:
-        print(f"DBエラーが発生しました: {e}")
 
 # 天気アイコンを設定する関数
 def get_weather_icon(icon_str):
@@ -97,7 +71,7 @@ def main():
     own_api_key = os.environ.get("OWM_API_KEY")
 
     # DB接続
-    connection = db_connect()
+    connection = dbConnect.db_connect()
     cursor = connection.cursor()
     cursor.execute("SELECT user_id, prefecture, city FROM users")
 

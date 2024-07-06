@@ -1,0 +1,5 @@
+python-dotenv
+pytz
+pandas
+line-bot-sdk
+psycopg2-binary

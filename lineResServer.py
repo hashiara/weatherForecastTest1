@@ -51,7 +51,7 @@ def handle_message(event):
     #     event.reply_token,
     #     TextSendMessage(text=event.message.text)
     # )
-    user_id = event.source.userId
+    user_id = event.source.user_id
     LINE_ACCESS_TOKEN.multicast(user_id, TextSendMessage("成功！"))
 
 if __name__ == "__main__":

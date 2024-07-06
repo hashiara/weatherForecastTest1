@@ -19,7 +19,7 @@ import dbConnect
 # 環境変数呼び出し
 app = Flask(__name__)
 load_dotenv()
-LINE_ACCESS_TOKEN = LineBotApi(os.environ.get("LINE_ACCESS_TOKEN"))
+LINE_ACCESS_TOKEN = LineBotApi(os.getenv("LINE_ACCESS_TOKEN"))
 Handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
 # lineMessagingAPIからのアクセスを受付

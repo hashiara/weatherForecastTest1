@@ -1,1 +1,1 @@
-push-to-line: python index.py
+web: python lineResServer.py

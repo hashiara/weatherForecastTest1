@@ -43,6 +43,11 @@ def callback():
 # アクセスしたユーザーが初回登録か登録済みか判定しLineに返信
 @Handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    # トークンを特例として許可
+    if (event.reply_token == '00000000000000000000000000000000' or
+            event.reply_token == 'ffffffffffffffffffffffffffffffff'):
+        app.logger.info('Verify Event Received')
+        return
     # 受け取ったメッセージをそのまま返す
     LINE_ACCESS_TOKEN.reply_message(
         event.reply_token,

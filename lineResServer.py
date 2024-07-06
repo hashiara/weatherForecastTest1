@@ -14,7 +14,7 @@ from linebot.models import (
 )
 
 # 別ファイル呼び出し
-import dbConnect
+# import dbConnect
 
 # 環境変数呼び出し
 app = Flask(__name__)

@@ -3,12 +3,10 @@ import os
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from flask import Flask, request, abort
-from linebot import (
+from linebot.v3 import (
     LineBotApi, WebhookHandler
 )
-from linebot.exceptions import (
-    InvalidSignatureError
-)
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )

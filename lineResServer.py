@@ -7,6 +7,7 @@ from linebot import (
     LineBotApi, WebhookHandler
 )
 from linebot.exceptions import InvalidSignatureError
+from linebot.exceptions import LineBotApiError
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
@@ -51,10 +52,13 @@ def handle_message(event):
     #     event.reply_token,
     #     TextSendMessage(text=event.message.text)
     # )
-    profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
-    user_id = profile.user_id
-    print(user_id)
-    LINE_ACCESS_TOKEN.multicast(user_id, TextSendMessage("成功！"))
+    try:
+        profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
+        user_id = profile.user_id
+        print(f"ユーザーID：{user_id}")
+        LINE_ACCESS_TOKEN.multicast([user_id], TextSendMessage(text="成功！"))
+    except LineBotApiError as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

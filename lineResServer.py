@@ -64,6 +64,8 @@ def handle_message(event):
 
     # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
     registCheckFlag = userId not in cursor
+    print(f"カーソル：　{cursor}")
+    print(f"ユーザーID：　{userId}")
     if (registCheckFlag):
         oneTimeKey = get_random_string(12)
         try:

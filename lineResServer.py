@@ -60,15 +60,11 @@ def handle_message(event):
     # DB接続
     connection = dbConnect.db_connect()
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id FROM users")
+    cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (userId))
 
     # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
-    registCheckFlag = userId not in cursor
-    for row in cursor:
-        print(f"カーソル：　{row}")
-    print(f"ユーザーID：　{userId}")
-    print(f"登録済みユーザーか否か：　{registCheckFlag}")
-    if (registCheckFlag):
+    registCheckFlag = cursor.fetchone()
+    if registCheckFlag is None:
         oneTimeKey = get_random_string(12)
         try:
             cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s, %s)", (userId, oneTimeKey))

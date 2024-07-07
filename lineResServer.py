@@ -71,8 +71,7 @@ def handle_message(event):
             connection.commit()
         except Exception as e:
             print(f"Error inserting {userId}: {e}")
-        # textMessage = f"ワンタイム認証キー：{oneTimeKey}"
-        textMessage = userId
+        textMessage = f"ワンタイム認証キー：{oneTimeKey}"
     else:
         textMessage = "登録済みユーザーです"
     

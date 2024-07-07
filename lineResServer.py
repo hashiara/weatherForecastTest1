@@ -1,5 +1,7 @@
 # ライブラリ
 import os
+import random
+import string
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from flask import Flask, request, abort
@@ -13,7 +15,7 @@ from linebot.models import (
 )
 
 # 別ファイル呼び出し
-# import dbConnect
+import dbConnect
 
 # 環境変数呼び出し
 app = Flask(__name__)
@@ -39,52 +41,54 @@ def callback():
 
     return 'line connect status 200'
 
-# アクセスしたユーザーが初回登録か登録済みか判定しLineに返信
+# アクセスしたユーザーのLineに返信
 @Handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    # DB接続
+    connection = dbConnect.db_connect()
+    cursor = connection.cursor()
+    cursor.execute("SELECT user_id FROM users")
+    # アクセスユーザーIDの取得
+    profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
+    userId = profile.user_id
+    textMessage = ""
     # トークンを特例として許可
     if (event.reply_token == '00000000000000000000000000000000' or
             event.reply_token == 'ffffffffffffffffffffffffffffffff'):
         app.logger.info('Verify Event Received')
         return
-    # 受け取ったメッセージをそのまま返す
-    # LINE_ACCESS_TOKEN.reply_message(
-    #     event.reply_token,
-    #     TextSendMessage(text=event.message.text)
-    # )
+
+    # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
+    registCheckFlag = userId not in cursor
+    if (registCheckFlag):
+        oneTimeKey = get_random_string(12)
+        try:
+            cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s)", (userId, oneTimeKey))
+            connection.commit()
+        except Exception as e:
+            print(f"Error inserting {userId}: {e}")
+        textMessage = f"ワンタイム認証キー：{oneTimeKey}"
+    else:
+        textMessage = "登録済みユーザーです"
+    
+    # DB接続を閉じる
+    cursor.close()
+    connection.close()
+    print("DB closed")
+
+    # ユーザーにプッシュ通知
     try:
-        profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
-        user_id = profile.user_id
-        print(f"ユーザーID：{user_id}")
-        LINE_ACCESS_TOKEN.multicast([user_id], TextSendMessage(text="成功！"))
+        LINE_ACCESS_TOKEN.multicast([userId], TextSendMessage(text=textMessage))
     except LineBotApiError as e:
         print(f"Error: {e}")
+
+# ランダムなワンタイム認証キーを生成
+def get_random_string(num):
+    LETTERS = string.ascii_letters
+    random_letters = random.choices(LETTERS, k=num)
+    random_string = ''.join(random_letters)
+    return random_string
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-# # DB接続
-# connection = dbConnect.db_connect()
-# cursor = connection.cursor()
-# cursor.execute("SELECT user_id FROM users")
-
-# for row in cursor:
-#     user_id = row[0]
-#     prefecture_id = row[1]
-#     city_id = row[2]
-#     if user_id:
-#         try:
-#             send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"))
-#             print('正常にメッセージを送信できました！')
-#         except LineBotApiError as e:
-#             print('main関数内でエラーが発生しました。')
-#             print('Error occurred: {}'.format(e))
-
-# # 接続を閉じる
-# cursor.close()
-# connection.close()
-# print("DB Closed")

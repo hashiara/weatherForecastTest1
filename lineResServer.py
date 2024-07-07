@@ -44,26 +44,30 @@ def callback():
 # アクセスしたユーザーのLineに返信
 @Handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    # DB接続
-    connection = dbConnect.db_connect()
-    cursor = connection.cursor()
-    cursor.execute("SELECT user_id FROM users")
     # アクセスユーザーIDの取得
     profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
     userId = profile.user_id
+    # 送信されたメッセージが設定済みのメッセージか判定
+    setMessage = os.getenv("SET_MESSAGE")
+    getMessage = event.message.text
+    if getMessage != setMessage: exit()
     textMessage = ""
     # トークンを特例として許可
     if (event.reply_token == '00000000000000000000000000000000' or
             event.reply_token == 'ffffffffffffffffffffffffffffffff'):
         app.logger.info('Verify Event Received')
         return
+    # DB接続
+    connection = dbConnect.db_connect()
+    cursor = connection.cursor()
+    cursor.execute("SELECT user_id FROM users")
 
     # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
     registCheckFlag = userId not in cursor
     if (registCheckFlag):
         oneTimeKey = get_random_string(12)
         try:
-            cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s)", (userId, oneTimeKey))
+            cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s, %s)", (userId, oneTimeKey))
             connection.commit()
         except Exception as e:
             print(f"Error inserting {userId}: {e}")

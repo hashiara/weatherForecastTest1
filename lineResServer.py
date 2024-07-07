@@ -60,7 +60,7 @@ def handle_message(event):
     # DB接続
     connection = dbConnect.db_connect()
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (userId))
+    cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (userId,))
 
     # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
     registCheckFlag = cursor.fetchone()

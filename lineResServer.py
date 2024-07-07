@@ -51,7 +51,9 @@ def handle_message(event):
     #     event.reply_token,
     #     TextSendMessage(text=event.message.text)
     # )
-    user_id = event.source.user_id
+    profile = LINE_ACCESS_TOKEN.get_profile(event.source.user_id)
+    user_id = profile.user_id
+    print(user_id)
     LINE_ACCESS_TOKEN.multicast(user_id, TextSendMessage("成功！"))
 
 if __name__ == "__main__":

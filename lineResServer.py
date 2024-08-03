@@ -3,6 +3,8 @@ import os
 import random
 import string
 import gspread
+import json
+from google.oauth2 import service_account
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from flask import Flask, request, abort
@@ -24,13 +26,24 @@ load_dotenv()
 LINE_ACCESS_TOKEN = LineBotApi(os.getenv("LINE_ACCESS_TOKEN"))
 Handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
-key_name = 'dailysmartlog-0007644ed660.json'
+
+
+# 環境変数から認証情報を取得
+credentials_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
+# Google Sheets APIにアクセスするためのクレデンシャルを作成
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info,
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
+# gspreadでGoogle Sheetsにアクセス
+gc = gspread.authorize(credentials)
+# スプレッドシートを開く
 sheet_name = 'DailySmartLog'
-
-gc = gspread.service_account(filename= key_name)
-
 wks = gc.open(sheet_name).sheet1
+# セルにデータを更新
 wks.update_cell(1, 1, 'Pythonから入力')
+
+
 
 # lineMessagingAPIからのアクセスを受付
 @app.route("/callback", methods=['POST'])

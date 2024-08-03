@@ -67,7 +67,7 @@ def handle_message(event):
     if registCheckFlag is None:
         oneTimeKey = get_random_string(12)
         try:
-            cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s, %s)", (userId, oneTimeKey))
+            cursor.execute("INSERT INTO users (user_id, otk, created_at) VALUES (%s, %s, NOW())", (userId, oneTimeKey))
             connection.commit()
         except Exception as e:
             print(f"Error inserting {userId}: {e}")

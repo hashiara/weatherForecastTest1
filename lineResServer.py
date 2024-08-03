@@ -70,6 +70,7 @@ def handle_message(event):
             cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s, %s)", (userId, oneTimeKey))
             connection.commit()
         except Exception as e:
+            LINE_ACCESS_TOKEN.multicast([userId], TextSendMessage(text=e))
             print(f"Error inserting {userId}: {e}")
         textMessage = f"ワンタイム認証キー：{oneTimeKey}"
     else:

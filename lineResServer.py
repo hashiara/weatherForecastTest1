@@ -26,25 +26,6 @@ load_dotenv()
 LINE_ACCESS_TOKEN = LineBotApi(os.getenv("LINE_ACCESS_TOKEN"))
 Handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
-
-
-# 環境変数から認証情報を取得
-credentials_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
-# Google Sheets APIにアクセスするためのクレデンシャルを作成
-credentials = service_account.Credentials.from_service_account_info(
-    credentials_info,
-    scopes=["https://www.googleapis.com/auth/spreadsheets"]
-)
-# gspreadでGoogle Sheetsにアクセス
-gc = gspread.authorize(credentials)
-# スプレッドシートを開く
-sheet_name = 'DailySmartLog'
-wks = gc.open(sheet_name).sheet1
-# セルにデータを更新
-wks.update_cell(1, 1, 'Pythonから入力')
-
-
-
 # lineMessagingAPIからのアクセスを受付
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -83,6 +64,25 @@ def handle_message(event):
     connection = dbConnect.db_connect()
     cursor = connection.cursor()
     cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (userId,))
+
+
+
+    # 環境変数から認証情報を取得
+    credentials_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
+    # Google Sheets APIにアクセスするためのクレデンシャルを作成
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info,
+        scopes=["https://www.googleapis.com/auth/spreadsheets"]
+    )
+    # gspreadでGoogle Sheetsにアクセス
+    gc = gspread.authorize(credentials)
+    # スプレッドシートを開く
+    sheet_name = 'DailySmartLog'
+    wks = gc.open(sheet_name).sheet1
+    # セルにデータを更新
+    wks.update_cell(1, 1, 'Pythonから入力')
+
+
 
     # アクセスユーザーが初回登録か判定しワンタイムキーの発行とDBへの追加
     registCheckFlag = cursor.fetchone()

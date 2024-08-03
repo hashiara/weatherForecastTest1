@@ -2,6 +2,7 @@
 import os
 import random
 import string
+import gspread
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from flask import Flask, request, abort
@@ -22,6 +23,14 @@ app = Flask(__name__)
 load_dotenv()
 LINE_ACCESS_TOKEN = LineBotApi(os.getenv("LINE_ACCESS_TOKEN"))
 Handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
+
+key_name = 'dailysmartlog-0007644ed660.json'
+sheet_name = 'DailySmartLog'
+
+gc = gspread.service_account(filename= key_name)
+
+wks = gc.open(sheet_name).sheet1
+wks.update_cell(1, 1, 'Pythonから入力')
 
 # lineMessagingAPIからのアクセスを受付
 @app.route("/callback", methods=['POST'])
@@ -70,7 +79,6 @@ def handle_message(event):
             cursor.execute("INSERT INTO users (user_id, otk) VALUES (%s, %s)", (userId, oneTimeKey))
             connection.commit()
         except Exception as e:
-            LINE_ACCESS_TOKEN.multicast([userId], TextSendMessage(text=e))
             print(f"Error inserting {userId}: {e}")
         textMessage = f"ワンタイム認証キー：{oneTimeKey}"
     else:

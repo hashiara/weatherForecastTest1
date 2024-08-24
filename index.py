@@ -39,7 +39,7 @@ def get_weather_icon(icon_str):
         return ""
 
 # 文章内容を整形してLineに送信する関数
-def send_to_line(user_id, df):
+def send_to_line(user_id, df, line_access_token):
     texts = []
     for i, (tomorrow, data) in enumerate(df):
         if i == 1:
@@ -55,13 +55,13 @@ def send_to_line(user_id, df):
                 )
                 place = f"{d['place']}"
 
-    line_bot = LineBotApi(os.environ.get("LINE_ACCESS_TOKEN"))
+    line_bot = LineBotApi(line_access_token)
         
     try:
         line_bot.multicast(user_id.split(","), TextSendMessage(text="\n".join(texts)))
-        print('成功')
+        print('push to line Code:200')
     except LineBotApiError as e:
-        print('send_to_line関数内でエラーが発生しました。')
+        print('push to line:error')
         print('Error occurred: {}'.format(e))
 
 # ファイル実行時の関数
@@ -69,11 +69,12 @@ def main():
     # envファイルから環境変数を読み込む
     load_dotenv()
     own_api_key = os.environ.get("OWM_API_KEY")
+    line_access_token = os.environ.get("LINE_ACCESS_TOKEN")
 
     # DB接続
     connection = dbConnect.db_connect()
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id, prefecture, city FROM users")
+    cursor.execute("SELECT user_id, prefecture, city FROM local")
 
     for row in cursor:
         user_id = row[0]
@@ -113,7 +114,7 @@ def main():
                 arr_rj.append(conv_rj)
             
             try:
-                send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"))
+                send_to_line(user_id, pd.DataFrame(arr_rj).groupby("date"), line_access_token)
                 print('正常にメッセージを送信できました！')
             except LineBotApiError as e:
                 print('main関数内でエラーが発生しました。')

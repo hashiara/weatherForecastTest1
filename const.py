@@ -1,6 +1,6 @@
 # バースデーメッセージ
 BIRTH_MESSAGE = (
-    "HAPPY BIRTH DAY! {user_name}\n"
+    "HAPPY BIRTH DAY！ {user_name}！\n"
     "今日は{user_name}さんの誕生日ですね！\n"
     "お誕生日おめでとうございます☆\n"
     "今までで一番幸せな日になることを願っています。"

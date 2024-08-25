@@ -50,7 +50,7 @@ def main():
         user_id = row[0]
         user_name = row[1]
         birth = row[2]
-        if user_id is not None and birth is not None:
+        if all(val is not None for val in [user_id, birth]):
             today = datetime.date.today()
             today_md = today.strftime("%m-%d")
             birth_md = birth.strftime("%m-%d")

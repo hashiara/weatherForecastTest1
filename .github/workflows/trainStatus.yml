@@ -1,14 +1,15 @@
 name: trainStatus-batch
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
+
     # branches-ignore: #実行一時ストップ用
     #   - '**'
 
   # 10分毎、8:00から23:50までおよび00:00に実行される
-  # schedule:
-  #   - cron: '*/10 8-23,0,0 1-10 * *'
+  schedule:
+    - cron: '*/10 8-23,0,0 1-10 * *'
 
 jobs:
 

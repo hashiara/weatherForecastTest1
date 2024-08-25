@@ -1,14 +1,15 @@
 name: weather-batch
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
+
     # branches-ignore: #実行一時ストップ用
     #   - '**'
 
   # +9時間の差があるので、この場合20時に実行される
-  # schedule:
-  #   - cron: '00 11 * * *'
+  schedule:
+    - cron: '00 11 * * *'
 
 jobs:
 

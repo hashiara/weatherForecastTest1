@@ -47,3 +47,4 @@ jobs:
         run: |
           chmod +x trainStatus.py
           python trainStatus.py
+          

@@ -50,3 +50,4 @@ jobs:
         run: |
           chmod +x weather.py
           python weather.py
+          

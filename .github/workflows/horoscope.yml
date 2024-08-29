@@ -1,15 +1,15 @@
 name: horoscope-batch
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
     
     # branches-ignore: #実行一時ストップ用
     #   - '**'
 
   # +9時間の差があるので、この場合8時に実行される
-  schedule:
-    - cron: '00 23 * * *'
+  # schedule:
+  #   - cron: '00 23 * * *'
 
 jobs:
 
